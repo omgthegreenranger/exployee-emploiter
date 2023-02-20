@@ -3,7 +3,7 @@ const mysql = require('mysql2');
 const sqlManager = 'SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee LEFT JOIN role ON role.id = employee.role_id WHERE role.management = 1;'
 const sqlRole = 'SELECT title, id FROM role';
 const pool = mysql.createPool({
-    host: 'localhost',
+    host: '127.0.0.1',
     user: 'bootcamp',
     password: 'fullstack',
     database: 'exployee_emploiter',

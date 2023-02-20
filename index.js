@@ -34,7 +34,6 @@ function mainMenu() {
                 case 'Add':
                     console.log("Add");
                     var recordAct = new Records.AddRecords(level);
-                    // renderPrompt();
                     break;
                 case 'Update':
                     console.log("Update");
