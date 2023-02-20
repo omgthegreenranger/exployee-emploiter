@@ -1,4 +1,4 @@
-CREATE DATABASE exployee_emploiter;
+CREATE DATABASE IF NOT EXISTS exployee_emploiter;
 
 USE exployee_emploiter;
 
@@ -11,6 +11,7 @@ CREATE TABLE role (
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(30),
     salary DECIMAL,
+    management BOOLEAN,
     department_id INT,
     FOREIGN KEY (department_id)
     REFERENCES department(id)
