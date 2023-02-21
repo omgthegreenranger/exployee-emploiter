@@ -70,5 +70,4 @@ function renderPrompt() {
         })
 }
         
-
 module.exports = { mainMenu };

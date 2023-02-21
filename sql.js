@@ -13,7 +13,8 @@ const pool = mysql.createPool({
     idleTimeout: 6000,
     queueLimit: 0
 });
-// queries for list values
+
+// queries for selection list arrays
 
 async function departmentQuery() {
     const [rows] = await pool.promise().query(sqlDept)
@@ -21,7 +22,7 @@ async function departmentQuery() {
     results = results.replaceAll("id", "value");
     results = JSON.parse(results);
     return results;
-}
+    };
 
 async function roleQuery() {
     const [rows] = await pool.promise().query(sqlRole)
@@ -30,7 +31,7 @@ async function roleQuery() {
     results = results.replaceAll("id", "value");
     results = JSON.parse(results);
     return results;
-};
+    };
 
 async function managerQuery() {
     const [rows] = await pool.promise().query(sqlManager)
@@ -57,16 +58,27 @@ async function employeeQuery() {
     };
 
 
+// function to return records to display in console.
+
 async function viewQuery(level) {
-    // Remember to switch this depending on the level)
-    const sqlView = 'SELECT * FROM ' + level;
+    switch(level) {
+        case 'employee':
+            var sqlView = 'SELECT employee.first_name AS "First Name", employee.last_name AS "Last Name", role.title AS "Title" FROM employee LEFT JOIN role WHERE employee.role_id = role.id';  
+            break;          
+        case 'role':
+            var sqlView = 'SELECT * FROM ' + level;
+            break;
+        case 'department':
+            var sqlView = 'SELECT * FROM ' + level;
+            break;
+    }   
     const [rows] = await pool.promise().query(sqlView);
     return rows;
-};
+    };
 
 function sqlInject(sqlParam) {
     pool.query(sqlParam);
     return;
-}
+    };  
 
 module.exports = { departmentQuery, roleQuery, managerQuery, employeeQuery, viewQuery, sqlInject };

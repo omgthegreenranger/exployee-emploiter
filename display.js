@@ -160,5 +160,4 @@ class UpdateRecords extends SqlConnect {
     }
 }
 
-
 module.exports = { SqlConnect, AddRecords, UpdateRecords };
