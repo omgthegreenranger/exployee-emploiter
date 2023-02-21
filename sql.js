@@ -1,7 +1,7 @@
-const ct = require('console.table');
 const mysql = require('mysql2');
 const sqlManager = 'SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee LEFT JOIN role ON role.id = employee.role_id WHERE role.management = 1;'
 const sqlRole = 'SELECT title, id FROM role';
+const sqlDept = 'SELECT * FROM department';
 const pool = mysql.createPool({
     host: '127.0.0.1',
     user: 'bootcamp',
@@ -13,6 +13,14 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 // queries for list values
+
+async function departmentQuery() {
+    const [rows] = await pool.promise().query(sqlDept)
+    var results = JSON.stringify(rows);
+    results = results.replaceAll("id", "value");
+    results = JSON.parse(results);
+    return results;
+}
 
 async function roleQuery() {
     const [rows] = await pool.promise().query(sqlRole)
@@ -47,4 +55,4 @@ function sqlInject(sqlParam) {
     return;
 }
 
-module.exports = { roleQuery, managerQuery, viewQuery, sqlInject };
+module.exports = { departmentQuery, roleQuery, managerQuery, viewQuery, sqlInject };
