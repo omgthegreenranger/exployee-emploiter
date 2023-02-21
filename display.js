@@ -124,6 +124,8 @@ class UpdateRecords extends SqlConnect {
     constructor(level) {
         super(level);
     }
+
+    // THIS PARTICULAR FUNCTION IS FAILING
     async update(callback) {
         inquirer
             .prompt([
@@ -131,44 +133,37 @@ class UpdateRecords extends SqlConnect {
                     message: 'Choose employee:',
                     type: 'list',
                     name: 'employee',
+                    // This one works no problem - it grabs the employees
                     choices: async function(employees) {
                         employees = await queries.employeeQuery(this.level);
                         return employees;
                     }
                 },
             ])
-            .then((answers) => {
-                let answer = answers;
-                console.log(answer['employee']);
-                var employees = async function (employees) {
-                    let sql = "SELECT * FROM employee WHERE id = " + answer['employee'];
-                    employees = await queries.employeeQuery(sql);
-                    return employees;
+            .then((answers) => { 
+                let answers = answers;
+                await async function(defaultDept) {
+                    let sql = "SELECT * FROM employee WHERE id = " + answers.list['employee'];
+                    defaultDept= queries.employeeQuery(sql);
+                    
+                    return defaultDept;
+                    // THIS IS A MESS HERE.
+                    {
+                message: 'Change Department',
+                type: 'list',
+                name: 'department',
+                //this works fine, too.
+                choices: async function(departments) {
+                    var departments = await queries.departmentsQuery(this.level);
+                    return departments;
+                    },
+                default: ''
+                    // this needs to default to the department_ID from `employees`, as it is the foreign key to departments
                 }
-                console.log(employees());
-
-                var employee = answers;
-
-                }
-                // return empRole;
-            )
-            // .then(empRole => {
-            //         inquirer
-            //             .prompt([
-            //     {
-            //         message: 'Change Department',
-            //         type: 'list',
-            //         name: 'department',
-            //         choices: async function(departments) {
-            //             var departments = await queries.departmentsQuery(this.level);
-            //             return departments;
-            //             },
-            //         default: empRole              
-            //     }
-
-            //     ])
-            // })
-    }
+                
+            }
+            })
+            
 }
 
 
