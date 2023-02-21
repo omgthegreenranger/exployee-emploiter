@@ -125,7 +125,6 @@ class UpdateRecords extends SqlConnect {
         super(level);
     }
 
-    // THIS PARTICULAR FUNCTION IS FAILING
     async update(callback) {
         inquirer
             .prompt([
@@ -133,37 +132,32 @@ class UpdateRecords extends SqlConnect {
                     message: 'Choose employee:',
                     type: 'list',
                     name: 'employee',
-                    // This one works no problem - it grabs the employees
                     choices: async function(employees) {
                         employees = await queries.employeeQuery(this.level);
                         return employees;
                     }
                 },
+                {
+                    message: 'Change Role',
+                    type: 'list',
+                    name: 'role',
+                    //this works fine, too.
+                    choices: async function(roles) {
+                        var roles = await queries.roleQuery(this.level);
+                        return roles;
+                        },
+                },   
             ])
-            .then((answers) => { 
-                let answers = answers;
-                await async function(defaultDept) {
-                    let sql = "SELECT * FROM employee WHERE id = " + answers.list['employee'];
-                    defaultDept= queries.employeeQuery(sql);
-                    
-                    return defaultDept;
-                    // THIS IS A MESS HERE.
-                    {
-                message: 'Change Department',
-                type: 'list',
-                name: 'department',
-                //this works fine, too.
-                choices: async function(departments) {
-                    var departments = await queries.departmentsQuery(this.level);
-                    return departments;
-                    },
-                default: ''
-                    // this needs to default to the department_ID from `employees`, as it is the foreign key to departments
-                }
-                
-            }
+            .then((answers) => {
+                let updates = answers;
+                let sql = "UPDATE employee SET role_id = " + updates.role + " WHERE id = " + answers.employee + ";";
+                console.log(sql);
+                queries.sqlInject(sql);
             })
-            
+            .finally(() => {
+                callback(true)
+            })            
+    }
 }
 
 
