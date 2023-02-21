@@ -33,21 +33,23 @@ function mainMenu() {
                     break;
                 case 'Add':
                     console.log("Add");
-                    const run = new AddRecords(level);
-                    const done = run.add(function(arg1) {
+                    const runAdd = new AddRecords(level);
+                    const doneAdd = runAdd.add(function(arg1) {
                         renderPrompt();
                     })
                     break;
                 case 'Update':
                     console.log("Update");
-                    var recordAct = new UpdateRecords(level);
-                    renderPrompt();
+                    const runUpdate = new UpdateRecords(level);
+                    const doneUpdate = runUpdate.update(function(arg1) {
+                        renderPrompt();
+                    })
                     break;
                 case 'Quit':
                     process.exit();
             }
         })
-        }
+}
 
 function renderPrompt() {
     inquirer

@@ -2,6 +2,7 @@ const mysql = require('mysql2');
 const sqlManager = 'SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee LEFT JOIN role ON role.id = employee.role_id WHERE role.management = 1;'
 const sqlRole = 'SELECT title, id FROM role';
 const sqlDept = 'SELECT * FROM department';
+const sqlEmployee = 'SELECT * FROM employee';
 const pool = mysql.createPool({
     host: '127.0.0.1',
     user: 'bootcamp',
@@ -39,9 +40,22 @@ async function managerQuery() {
         newID = rows[i].id;
         managers.push({"name": newName, "value": newID});
     }
-    return managers;
-    
+    return managers;   
     };
+
+async function employeeQuery() {
+    const [rows] = await pool.promise().query(sqlEmployee)
+    let employees = [];
+    for(let i = 0; i < rows.length; i++) {
+        newName = rows[i].first_name + " " + rows[i].last_name;
+        newID = rows[i].id;
+        newRole = rows[i].role_id;
+        newMan = rows[i].manager_id;
+        employees.push({"name": newName, "value": newID, "role": newRole, "manager": newMan});
+    }
+    return employees;   
+    };
+
 
 async function viewQuery(level) {
     // Remember to switch this depending on the level)
@@ -55,4 +69,4 @@ function sqlInject(sqlParam) {
     return;
 }
 
-module.exports = { departmentQuery, roleQuery, managerQuery, viewQuery, sqlInject };
+module.exports = { departmentQuery, roleQuery, managerQuery, employeeQuery, viewQuery, sqlInject };
