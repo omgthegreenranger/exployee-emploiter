@@ -1,6 +1,6 @@
 // Load packages and modules
 const inquirer = require('inquirer');
-const { AddRecords, UpdateRecords, ViewRecords } = require('./display.js');
+const { AddRecords, UpdateRecords, ViewRecords, DeleteRecords } = require('./display.js');
 const ct = require('console.table');
 
 // First prompt - main menu
@@ -30,7 +30,7 @@ function mainMenu() {
                 type: 'list',
                 name: 'main_menu',
                 message: 'What would you like to do, o Lord?',
-                choices: ['View Employees', 'Add Employee', 'Update Employee', 'View Roles', 'Add Role', 'View Departments', 'Add Department',  'Quit'],
+                choices: ['View Employees', 'Add Employee', 'Update Employee', 'View Roles', 'Add Role', 'View Departments', 'Add Department',  'Delete Records', 'Quit'],
                 loop: 'true',
             }
         ])
@@ -48,16 +48,20 @@ function mainMenu() {
                             })
                     break;
                 case 'Add':
-                    console.log("Add");
                     const runAdd = new AddRecords(level);
                     const doneAdd = runAdd.add(function(arg1) {
                         renderPrompt();
                     })
                     break;
                 case 'Update':
-                    console.log("Update");
                     const runUpdate = new UpdateRecords(level);
                     const doneUpdate = runUpdate.update(function(arg1) {
+                        renderPrompt();
+                    })
+                    break;
+                case 'Delete':
+                    const runDelete = new DeleteRecords(level);
+                    const doneDelete = runDelete.delete(function(arg1) {
                         renderPrompt();
                     })
                     break;
