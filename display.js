@@ -132,33 +132,59 @@ class UpdateRecords extends SqlConnect {
     }
 
     async update(callback) {
+        var employees = await queries.employeeQuery(this.level);
+        var roles = await queries.roleQuery(this.level);
+        var managers = await queries.managerQuery(this.level);
         inquirer
             .prompt([
                 {
                     message: 'Choose employee:',
                     type: 'list',
                     name: 'employee',
-                    choices: async function(employees) {
-                        employees = await queries.employeeQuery(this.level);
-                        return employees;
-                    }
+                    choices: employees
                 },
                 {
-                    message: 'Change Role',
+                    message: 'Change Role (Default Selected):',
                     type: 'list',
                     name: 'role',
-                    //this works fine, too.
-                    choices: async function(roles) {
-                        var roles = await queries.roleQuery(this.level);
-                        return roles;
-                        },
+                    choices: roles,
+                    default: async ({employee}) => {
+                        let empRole = employees.filter(obj => obj.value == employee)
+                        employee = empRole[0].name
+                        return employee;
+                    }
                 },   
+                {   
+                    message: 'Change Manager (Default Selected):',
+                    type: 'list',
+                    name: 'manager',
+                    choices: managers,
+                    default: async ({employee}) => {
+                        let empMan = employees.filter(obj => obj.value == employee)
+                        employee = empMan[0].name
+                        return employee;
+                    }
+
+                }
             ])
             .then((answers) => {
                 let updates = answers;
-                let sql = "UPDATE employee SET role_id = " + updates.role + " WHERE id = " + answers.employee + ";";
-                console.log(sql);
-                queries.sqlInject(sql);
+                let sql = "UPDATE employee SET role_id =" + updates.role + ", manager_id = " + updates.manager + " WHERE id = " + answers.employee + ";";
+                queries.sqlInject(sql);            
+                let roleName = roles.filter(obj => obj.value == updates.role);
+                let empName = employees.filter(obj => obj.value == updates.employee);
+                let empMan = managers.filter(obj => obj.value == updates.manager);
+                if (updates.role == empName[0].role) {
+                    console.log("You have not changed roles.");
+                } else {
+                    console.log("You have successfully moved " + empName[0].name + " to " + roleName[0].name)
+                }
+                if (updates.manager == empName[0].manager) {
+                    console.log("You have not changed managers");
+                } else {
+                    console.log("You have successfully assigned " + empMan[0].name + " as manager to " + empName[0].name)
+                }
+                
             })
             .finally(() => {
                 callback(true)
@@ -172,14 +198,66 @@ class ViewRecords extends SqlConnect {
         this.level = this.level.substring(0, this.level.length-1);
     }
     async view(callback) {
+        var managers = await queries.managerQuery();
+        var departments = await queries.departmentQuery();
             switch(this.level) {
                 case 'employee':
-                    var sqlView = 'SELECT t1.id AS "Employee ID", CONCAT(t1.first_name, " ", t1.last_name) AS "Employee Name", role.title AS "Position", role.salary AS "Salary", department.name AS "Department", CONCAT(t2.first_name, " ", t2.last_name) AS "Manager" FROM  employee AS t1 LEFT JOIN employee AS t2 ON t1.manager_id = t2.id JOIN role ON t1.role_id = role.id JOIN department ON role.department_id = department.id;';  
-                    var results = await queries.viewQuery(sqlView)
-                    .then((results) => {callback(results)});
+                    inquirer
+                        .prompt([
+                            {
+                                message: 'View employees by',
+                                type: 'list',
+                                name: 'viewBy',
+                                choices: ['Default', 'Manager', 'Department'],
+
+                            }
+                        ])
+                        .then ((answers) => {
+                            switch(answers.viewBy) {
+                                case "Default":
+                                    var sqlView = 'SELECT t1.id AS "Employee ID", CONCAT(t1.first_name, " ", t1.last_name) AS "Employee Name", role.title AS "Position", role.salary AS "Salary", department.name AS "Department", CONCAT(t2.first_name, " ", t2.last_name) AS "Manager" FROM  employee AS t1 LEFT JOIN employee AS t2 ON t1.manager_id = t2.id JOIN role ON t1.role_id = role.id JOIN department ON role.department_id = department.id;'; 
+                                    var result = queries.viewQuery(sqlView)
+                                    .then((results) => {callback(results)});
+                                    break;
+                                case "Manager":                                 
+                                    inquirer
+                                        .prompt([
+                                            {
+                                                message: 'Which manager to view',
+                                                name: 'manager',
+                                                type: 'list',
+                                                choices: managers
+                                            }
+                                        ])
+                                        .then((answers) => {
+                                            answers = answers;
+                                            var sqlView = 'SELECT t1.id AS "Employee ID", CONCAT(t1.first_name, " ", t1.last_name) AS "Employee Name", role.title AS "Position", role.salary AS "Salary", department.name AS "Department", CONCAT(t2.first_name, " ", t2.last_name) AS "Manager" FROM  employee AS t1 LEFT JOIN employee AS t2 ON t1.manager_id = t2.id JOIN role ON t1.role_id = role.id JOIN department ON role.department_id = department.id WHERE t1.manager_id = ' + answers.manager + ';';
+                                            var result = queries.viewQuery(sqlView)
+                                            .then((results) => {callback(results)});
+                                        });
+                                    break;
+                                case "Department":
+                                    inquirer
+                                    .prompt([
+                                        {
+                                            message: 'Which department to view',
+                                            name: 'department',
+                                            type: 'list',
+                                            choices: departments
+                                        }
+                                    ])
+                                    .then((answers) => {
+                                        answers = answers;
+                                        var sqlView = 'SELECT t1.id AS "Employee ID", CONCAT(t1.first_name, " ", t1.last_name) AS "Employee Name", role.title AS "Position", role.salary AS "Salary", department.name AS "Department", CONCAT(t2.first_name, " ", t2.last_name) AS "Manager" FROM  employee AS t1 LEFT JOIN employee AS t2 ON t1.manager_id = t2.id JOIN role ON t1.role_id = role.id JOIN department ON role.department_id = department.id WHERE  role.department_id = ' + answers.department + ';';
+                                        var result = queries.viewQuery(sqlView)
+                                        .then((results) => {callback(results)});
+                                    });                                
+                                    break;
+                            }
+                        })
                     break;          
                 case 'role':
-                    var sqlView = 'SELECT role.title AS "Title", role.salary AS "Salary", role.management AS "management", department.name AS Department FROM role JOIN department ON role.department_id = department.id';           
+                    var sqlView = 'SELECT role.title AS "Title", role.salary AS "Salary", role.management AS "Management", department.name AS Department FROM role JOIN department ON role.department_id = department.id';           
                     var result = await queries.viewQuery(sqlView)
                     .then((results) => {
                         results = results;
@@ -193,7 +271,7 @@ class ViewRecords extends SqlConnect {
                     .then((results) => {callback(results)});
                     break;
                 case 'department':
-                    var sqlView = 'SELECT * FROM department';
+                    var sqlView = 'SELECT department.id AS "ID", department.name AS "Department", role.salary AS "Total Salary" FROM department JOIN role ON role.department_id = department.id JOIN employee ON employee.role_id = role.id GROUP BY role.salary;';
                     var results = await queries.viewQuery(sqlView)
                     .then((results) => {callback(results)});
                     break;    
@@ -201,4 +279,85 @@ class ViewRecords extends SqlConnect {
         }    
 }
 
-module.exports = { ViewRecords, SqlConnect, AddRecords, UpdateRecords };
+class DeleteRecords extends SqlConnect {
+    constructor(level) {
+        super(level);
+    }
+
+    async delete(callback) {
+        var roles = await queries.roleQuery();
+        var departments = await queries.departmentQuery();
+        var employees = await queries.employeeQuery();
+        inquirer
+            .prompt([
+            {
+                message: 'Delete which record',
+                type: 'list',
+                name: 'delete',
+                choices: ['Employee', 'Role', 'Department'],
+            }
+        ])
+        .then ((answers) => {
+            switch(answers.delete) {
+                case "Employee":                                 
+                inquirer
+                    .prompt([
+                        {
+                            message: 'Delete employee:',
+                            name: 'employee',
+                            type: 'list',
+                            choices: employees
+                        }
+                    ])
+                    .then((answers) => {
+                        answers = answers;
+                        var sqlView = 'DELETE FROM employee WHERE id = ' + answers.employee + ';';
+                        var result = queries.viewQuery(sqlView)
+                        .then((results) => {
+                            console.log("Employee safely deleted");
+                            callback(results)});
+                    });
+                break;
+                case "Role":                                 
+                    inquirer
+                        .prompt([
+                            {
+                                message: 'Delete Role',
+                                name: 'role',
+                                type: 'list',
+                                choices: roles
+                            }
+                        ])
+                        .then((answers) => {
+                            answers = answers;
+                            var sqlView = 'DELETE FROM role WHERE id = ' + answers.role + ';';
+                            var result = queries.viewQuery(sqlView)
+                            .then((results) => {
+                                console.log("Role safely deleted");
+                                callback(results)});
+                        });
+                    break;
+                case "Department":
+                    inquirer
+                    .prompt([
+                        {
+                            message: 'Which department to view',
+                            name: 'department',
+                            type: 'list',
+                            choices: departments
+                        }
+                    ])
+                    .then((answers) => {
+                        answers = answers;
+                        var sqlView = 'DELETE FROM departments WHERE id = ' + answers.department + ';';
+                        var result = queries.viewQuery(sqlView)
+                        .then((results) => {
+                            console.log("Department safely deleted");
+                            callback(results)});
+                    });                                
+                    break;
+            }
+        })
+    }
+}
+module.exports = { ViewRecords, SqlConnect, AddRecords, UpdateRecords, DeleteRecords };

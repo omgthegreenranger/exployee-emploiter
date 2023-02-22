@@ -26,4 +26,7 @@ VALUES ("Paul", "Atreides", 11, 1),
     ("Gonzo", "The Incredible", 9, 1),
     ("Peter", "Parker", 8, 1),
     ("Malcolm", "Reynolds", 7, 1),
-    ("Eddard", "Stark", 6, 1);
+    ("Eddard", "Stark", 6, 1),
+    ("Inigo", "Montoya", 7, 2),
+    ("Ronald", "McDonald", 4, 7),
+    ("Stephen", "Cardie", 5, 6)
