@@ -60,18 +60,7 @@ async function employeeQuery() {
 
 // function to return records to display in console.
 
-async function viewQuery(level) {
-    switch(level) {
-        case 'employee':
-            var sqlView = 'SELECT employee.first_name AS "First Name", employee.last_name AS "Last Name", role.title AS "Title" FROM employee LEFT JOIN role WHERE employee.role_id = role.id';  
-            break;          
-        case 'role':
-            var sqlView = 'SELECT * FROM ' + level;
-            break;
-        case 'department':
-            var sqlView = 'SELECT * FROM ' + level;
-            break;
-    }   
+async function viewQuery(sqlView) {
     const [rows] = await pool.promise().query(sqlView);
     return rows;
     };

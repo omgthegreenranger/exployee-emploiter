@@ -45,14 +45,13 @@ class AddRecords extends SqlConnect {
                             var managers = await queries.managerQuery(this.level);
                             return managers;
                     }
-                }
-
+                    }
                 ])
                 .then((answers) => {
                     let values = answers;
                     let sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${values['employee_first']}", "${values['employee_last']}", ${values['role']}, ${values['manager']})`;
                     queries.sqlInject(sql);
-                    console.log(values);
+                    console.log("Successfully added "+ values['employee_first'] + " " + values['employee_last'] + " as a " + values['role']);
                     return;
                 })
                 .finally(() => {
@@ -75,6 +74,7 @@ class AddRecords extends SqlConnect {
                     let values = answers;
                     let sql = `INSERT INTO department (name) VALUES ("${values['department_name']}");`;
                     queries.sqlInject(sql);
+                    console.log("Successfully added " + values.department_name + " to the list of departments");
                     
                 })
                 .finally(() => {
@@ -113,6 +113,12 @@ class AddRecords extends SqlConnect {
                     let values = answers;
                     let sql = `INSERT INTO role (title, salary, management, department_id) VALUES ("${values['role_title']}", ${values['salary']}, ${values['management']}, ${values['department']});`;
                     queries.sqlInject(sql);
+                    if(values['management']) {
+                        var m = " management role";
+                    } else {
+                        var m = " role";
+                    };
+                    console.log("Succesfully added the " + values['role_title'] + m + " to the system.")
                 })
                 .finally(() => {
                 callback(true)
@@ -160,4 +166,39 @@ class UpdateRecords extends SqlConnect {
     }
 }
 
-module.exports = { SqlConnect, AddRecords, UpdateRecords };
+class ViewRecords extends SqlConnect {
+    constructor(level) {
+        super(level);
+        this.level = this.level.substring(0, this.level.length-1);
+    }
+    async view(callback) {
+            switch(this.level) {
+                case 'employee':
+                    var sqlView = 'SELECT t1.id AS "Employee ID", CONCAT(t1.first_name, " ", t1.last_name) AS "Employee Name", role.title AS "Position", role.salary AS "Salary", department.name AS "Department", CONCAT(t2.first_name, " ", t2.last_name) AS "Manager" FROM  employee AS t1 LEFT JOIN employee AS t2 ON t1.manager_id = t2.id JOIN role ON t1.role_id = role.id JOIN department ON role.department_id = department.id;';  
+                    var results = await queries.viewQuery(sqlView)
+                    .then((results) => {callback(results)});
+                    break;          
+                case 'role':
+                    var sqlView = 'SELECT role.title AS "Title", role.salary AS "Salary", role.management AS "management", department.name AS Department FROM role JOIN department ON role.department_id = department.id';           
+                    var result = await queries.viewQuery(sqlView)
+                    .then((results) => {
+                        results = results;
+                        for(let i = 0; i < results.length; i++) {
+                            if(results[i].management == 1) {
+                                results[i].management = "Yes";
+                            } else { results[i].management = "No"}
+                        }
+                        return results;
+                    })
+                    .then((results) => {callback(results)});
+                    break;
+                case 'department':
+                    var sqlView = 'SELECT * FROM department';
+                    var results = await queries.viewQuery(sqlView)
+                    .then((results) => {callback(results)});
+                    break;    
+            };
+        }    
+}
+
+module.exports = { ViewRecords, SqlConnect, AddRecords, UpdateRecords };
